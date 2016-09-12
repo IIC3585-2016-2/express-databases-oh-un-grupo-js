@@ -70,9 +70,11 @@ En nuestro caso, como un buen punto de inicio para ambos ORM, podemos mostrar ht
 
 Por nuestra parte, para hacerlo más entretenido, mostraremos a continuación, utilizando express, dos versiones de una pequeña aplicasión api rest, que empleará cada una de los dos ORM. Para que noten las diferencias de ambos sistemas, pero cómo al final ambos logran ser mucho más útiles y cómodos que una conección plana con las bases de datos.
 
-## tutorial con mongoose 
+## Levantamiento de aplicaciones
 
-##tutorial con sequelize
+### Node.js + Express + MongoDB (monk)
+
+### Node.js + Express + SQL (sequelize)
 
 
 <!-- #Conclusión
