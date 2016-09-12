@@ -73,7 +73,7 @@ Por nuestra parte, para hacerlo más entretenido, mostraremos a continuación, u
 ## Levantamiento de aplicaciones
 A continuación se muestran dos ejemplos que crean aplicaciones sencillas en Express. La primera se conecta a una base de datos orientada a documentos y la segunda a una relacional. 
 
-Ambas demostraciones se crean con el generador de aplicaciones Express que nos proporciona un scaffold:
+Ambas demostraciones se crean con el generador de aplicaciones Express. Para instalar en el sistema `express-generator`, ingresar:
 ```
 $ npm install express-generator -g
 ```
@@ -81,7 +81,109 @@ Para mostrar las opciones de comando se puede hacer:
 ```
 $ express -h
 ```
+
 ### Node.js + Express + MongoDB (monk)
+Creamos primero el scaffold de la aplicación:
+```
+$ express mongo-ex-ap
+$ cd mongo-ex-ap
+```
+Instalamos las dependencias que vienen con la creación del esqueleto:
+```
+$ cat package.json
+[...]
+  "dependencies": {
+    "body-parser": "~1.15.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.2.0",
+    "express": "~4.13.4",
+    "jade": "~1.11.0",
+    "morgan": "~1.7.0",
+    "serve-favicon": "~2.3.0"
+  }
+[...]
+$ npm install
+```
+Agregamos a la aplicación los módulos `monk` y su dependencia `mongodb`. Lo podemos hacer ingresándolos explícitamente en el objeto `"dependencies"` y luego `npm install`  o usando la CLI:
+```
+$ npm install --save mongodb monk
+$ cat package.json
+[...]
+  "dependencies": {
+    "body-parser": "~1.15.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.2.0",
+    "express": "~4.13.4",
+    "jade": "~1.11.0",
+    --> "mongodb": "^2.2.9",
+    --> "monk": "^3.1.2",
+    "morgan": "~1.7.0",
+    "serve-favicon": "~2.3.0"
+  }
+[...]
+```
+Podemos crear un directorio donde queremos guardar la data de MongoDB:
+```
+$ mkdir data
+```
+Nos aseguramos que mongo esté arrancando y le decimos a mongo el path de la base de datos:
+```
+$ sudo service mongod start
+$ mongod --dbpath data/
+```
+Ingresamos a mongo para crear una base de datos de ejmplo en la que creamos una colección `ejcollection`: 
+```
+$ mongo
+> use ejemplodb # Usamos una nueva base de datos. Se crea cuando le metemos colecciones.
+> show dbs
+test 3.952GB
+> db.ejcollection.insert({ 
+                           "username": "us1",
+                           "email": "us1@uc.cl" 
+                         })
+> show dbs
+ejemplodb   0.078GB
+test        3.952GB
+> show collections
+ejcollection
+> db.ejcollection.find().pretty()
+{
+	"_id" : ObjectId("57d0323b65e772a05b69e40f"),
+	"username" : "us1",
+	"email" : "us1@uc.cl"
+}
+```
+
+En el archivo principal de la aplicación, app.js, debemos agregar los módulos:
+```Javascript
+var mongo = require('mongodb');
+var monk = require('monk');
+```
+Definimos la variable para conectarnos a la base de datos usando monk. Por defecto, MondoDB escucha al puerto 27017:
+```
+var db = monk('localhost:27017/ejemplodb');
+```
+La conexión debe ir antes de la definición de rutas para que ellas puedan hacer uso de la DB:
+```Javascript
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Establecemos conexión a la base de datos en la cadena de middlewares
+app.use(function (req, res, next) {
+  req.db = db;
+  next();
+})
+
+app.use('/', routes);
+app.use('/users', users);
+```
+
+
+
+
 
 ### Node.js + Express + SQL (sequelize)
 
