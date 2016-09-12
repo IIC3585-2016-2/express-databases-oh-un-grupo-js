@@ -454,10 +454,10 @@ A conclusión personal, es posible que mongoose sea algo más... cómodo que seq
 <!-- ORM: https://es.wikipedia.org/wiki/Mapeo_objeto-relacional -->
 + [La era de los ODM](http://www.analyticaweb.com/desarrollo-web/doctrine2-la-era-de-los-odm)
 + [Mongoose vs driver nativo de node.js (mongodb)](http://voidcanvas.com/mongoose-vs-mongodb-native/)
-
-+ [Integración de bases de datos en Express](https://expressjs.com/en/guide/database-integration.html)
++ [Integración de bases de datos en Express: documentación oficial de Express](https://expressjs.com/en/guide/database-integration.html)
 + [Tutorial de Express+MongoDB (mongoose)](https://carlosazaustre.es/blog/como-crear-una-api-rest-usando-node-js/)
 + [Relacionando modelos en mongoose](https://carlosazaustre.es/blog/como-relacionar-tus-modelos-en-mongodb/)
 + [Tutorial de Express+MondoDB (monk)](http://cwbuecheler.com/web/tutorials/2013/node-express-mongo/)
 + [Creación de API REST con Express+MongoDB (monk) + AJAX](http://cwbuecheler.com/web/tutorials/2014/restful-web-app-node-express-mongodb/)
-+ [Integración de DBs relacionales con (sequelize) en Express](http://docs.sequelizejs.com/en/1.7.0/articles/express/)
++ [Integración de DBs relacionales con sequelize en Express: documentación oficial de Sequelize](http://docs.sequelizejs.com/en/1.7.0/articles/express/)
++ [Integración de DBs relacionales con sequelize en Express (2: github): documentación oficial de Sequelize](https://github.com/sequelize/express-example)
