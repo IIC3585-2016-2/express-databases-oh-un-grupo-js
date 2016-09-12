@@ -71,7 +71,16 @@ En nuestro caso, como un buen punto de inicio para ambos ORM, podemos mostrar ht
 Por nuestra parte, para hacerlo más entretenido, mostraremos a continuación, utilizando express, dos versiones de una pequeña aplicasión api rest, que empleará cada una de los dos ORM. Para que noten las diferencias de ambos sistemas, pero cómo al final ambos logran ser mucho más útiles y cómodos que una conección plana con las bases de datos.
 
 ## Levantamiento de aplicaciones
+A continuación se muestran dos ejemplos que crean aplicaciones sencillas en Express. La primera se conecta a una base de datos orientada a documentos y la segunda a una relacional. 
 
+Ambas demostraciones se crean con el generador de aplicaciones Express que nos proporciona un scaffold:
+```
+$ npm install express-generator -g
+```
+Para mostrar las opciones de comando se puede hacer:
+```
+$ express -h
+```
 ### Node.js + Express + MongoDB (monk)
 
 ### Node.js + Express + SQL (sequelize)
