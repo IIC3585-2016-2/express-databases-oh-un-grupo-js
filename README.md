@@ -212,18 +212,18 @@ router.get('/newuser', function (req, res) {
 	res.render('newuser', { title: 'Agrega Nuevo Usuario' });
 });
 ```
-Necesitamos el template newuser. Creamos un nuevo archivo views/newuser.jade con el siguiente formulario con id `formAddUser`:
-```
+Necesitamos el template newuser. Creamos un nuevo archivo views/newuser.jade con el siguiente form: <!-- con id `formAddUser`:-->
+```Javascript
 extends layout
 
 block content
 	h1= title
-		form#formAddUser(name="adduser",method="post",action="/adduser")
-			input#inputUserName(type="text", placeholder="username", name="username")
+		form(name="adduser",method="post",action="/adduser")
+			input(type="text", placeholder="username", name="username")
 			br
-			input#inputUserEmail(type="text", placeholder="email", name="useremail") 
+			input(type="text", placeholder="email", name="useremail") 
 			br
-			button#btnSubmit(type="submit") submit
+			button(type="submit") submit
 ```
 Recordando que encapsulamos el objeto de base de datos en cada request, podemos acceder a éste en cualquier ruta nueva que definamos, en particular, en routes/index.js podemos hacer: 
 ```Javascript
@@ -264,7 +264,181 @@ En Wandows
 
 
 ### Node.js + Express + SQL (sequelize)
+Igual que antes, creamos scaffold e instalamos módulos:
+```
+$ express sequelize-ex-app
+$ cd sequelize-ex-app
+$ npm install
+```
+Una librería ORM que permite el fácil acceso a bases de datos relacionales como MySQL, MariaDB, SQLite o PostgreSQL es Sequelize. Lo instalamos, junto a su CLI y SQLite, DBMS que usaremos para este ejemplo. Para usarlo lo ejecutamos en su path e inicializamos la base de datos. 
+```
+$ npm install --save sequelize sequelize-cli sqlite3
+$ node_modules/.bin/sequelize init
+```
+Lo anterior crea directorios config/, migrations/ y models/.
+Paralelamente podemos usar la creación automática de tablas que provee sequelize modificando el bin/www:
+```Javascript
+var app = require('../app');
+var debug = require('debug')('init:server');
+var http = require('http');
+// Agregamos el módulo de modelos:
+var models = require("../models");
+```
 
+```Javascript
+// Crea HTTP server:
+var server = http.createServer(app);
+
+// Sincroniza y luego levanta el servidor:
+models.sequelize.sync().then(function () {
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+});
+```
+Esto permite que cada vez que queramos correr la aplicación, antes de partir el servidor sequelize sincroniza los modelos con la base de datos.  
+Ahora generamos un modelo User con atributo username y un modelo Task con atributo title. La idea será anidar las tareas en el modelo usuario, de modo que 1 usuario pueda contener N tareas:
+
+```Javascript
+$ node_modules/.bin/sequelize model:create --name User --attributes username:string
+$ node_modules/.bin/sequelize model:create --name Task --attributes title:string
+```
+Esto genera 2 migraciones nuevas en migrations/ y 2 nuevos modelos en models/ (user.js y task.js).
+Para anidar vamos a cada uno de los archivos y modificamos lo siguiente:
+En models/user.js:
+```Javascript
+[...]
+classMethods: {
+  associate: function(models) {
+    // associations can be defined here
+    User.hasMany(models.Task);
+  }
+}
+[...]
+```
+En models/task.js:
+```Javascript
+classMethods: {
+  associate: function(models) {
+    Task.belongsTo(models.User, {
+      onDelete: "CASCADE",
+      foreignKey: { allowNull: false } // Para que no hayan tareas sin pertenecer a algún usuario
+		});
+  }
+}
+```
+En routes/index.js modificamos la respuesta dentro del `router.get()` para que renderice los usuarios luego de encontrarlos con un `.findAll({})`:
+```Javascript
+router.get('/', function(req, res, next) {
+  // res.render('index', { title: 'Ejemplo con Sequelize' });
+  models.User.findAll({
+  	include: [ models.Task ]
+  }).then(function(users) {
+  	res.render('index', {
+  		title: 'Express',
+  		users: users
+  	});
+  });
+});
+```
+En views/index.jade listamos los usuarios con las tareas. En la misma vista permitimos crear nuevos usuarios con tareas y eliminarlos:
+```Javascript
+extends layout
+
+block content
+  h1= title
+  p Ejemplo CRUD con Sequelize
+
+  h2 Crear nuevo usuario
+  form(action="/users/create", method="post")
+    input(type="text", name="username")
+    input(type="submit")
+
+  h2 Usuario
+
+  ul
+  each user in users
+    li
+      = user.username
+      |  
+      | (
+      a(href="/users/" + user.id + "/destroy") Eliminar
+      | )
+      ul
+        li
+          | Crear una nueva tarea:
+          form(action="/users/" + user.id + "/tasks/create", method="post", style="display: inline")
+            input(type="text", name="title")
+            input(type="submit")
+        each task in user.Tasks
+          li
+            = task.title
+            |  
+            | (
+            a(href="/users/" + user.id + "/tasks/" + task.id + "/destroy") Eliminar
+            | )
+```
+Luego vamos a routes/users.js para implementar la creación y destrucción tanto de usuarios como de tareas:
+```Javascript
+// Usuarios:
+router.post('/create', function(req, res) {
+  models.User.create({
+    username: req.body.username
+  }).then(function() {
+    res.redirect('/');
+  });
+});
+
+router.get('/:user_id/destroy', function(req, res) {
+  models.User.destroy({
+    where: {
+      id: req.params.user_id
+    }
+  }).then(function() {
+    res.redirect('/');
+  });
+});
+
+// Tareas:
+router.post('/:user_id/tasks/create', function (req, res) {
+  models.Task.create({
+    title: req.body.title,
+    UserId: req.params.user_id
+  }).then(function() {
+    res.redirect('/');
+  });
+});
+
+router.get('/:user_id/tasks/:task_id/destroy', function (req, res) {
+  models.Task.destroy({
+    where: {
+      id: req.params.task_id
+    }
+  }).then(function() {
+    res.redirect('/');
+  });
+});
+
+module.exports = router;
+```
+Queda editar el config/config.json para decirle a sequelize que nos estamos conectando en development con SQLite
+```Javascript
+{
+  "development": {
+    "dialect": "sqlite",
+    "storage": "./db.development.sqlite"
+  },
+  "test": { ...  },
+  "production": { ... }
+}
+```
+Corremos la aplicación:
+```
+$ npm start
+```
+
+### Otras herramientas
+A parte de los anteriores y de manera aislada podemos mapear a modelos bases de datos SQL o Mongo con el paquete [orm](https://www.npmjs.com/package/orm). Dependiente de éste es la librería [express-orm-mvs](https://github.com/ddo/express-orm-mvc) que permite crear estructuras MVC automáticas independiente del DBMS.
 
 <!-- #Conclusión
 
