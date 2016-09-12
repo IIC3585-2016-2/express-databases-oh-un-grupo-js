@@ -11,7 +11,7 @@ Bien se sabe que las bases de datos, unas más complejas que otras, cada una con
 <!-- Es posible integrar  tanto clásicas bases de datos SQL como mySQL, posgreSQL, etc, o bases no SQL como bases orientadas a documentos como mongoDB, bases orientadas a columnas como Cassandra, etc, y muchas otras más. -->
 <!-- La característica modular de Express lo hace conectable con cualquier base de datos que tenga algún driver para Node.js -->
 
-## Ejemplos de conecciones básicas 
+## Ejemplos de conexiones básicas 
 <!-- a bases de datos conocidas-->
 
 <!-- A continuación, mostramos rápidamente como integrar con express mongoDB y mySQL: -->
