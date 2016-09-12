@@ -181,8 +181,86 @@ app.use('/', routes);
 app.use('/users', users);
 ```
 
+Modificamos los archivos de ruta para desplegar en la aplicación nuestras consultas. En routes/index.js modificamos la respuesta al HTTP request para que muestre la lista de usuarios de nuestra base de datos. Para esto capturamos el objeto `db` contenido en `req` como lo definimos en app.js, extraemos la colección que creamos en mongo, escribimos la consulta de encontrar los datos de ésta y se la pasamos a un callback. Éste callback guarda en `"userlist"` los resultados de la consulta. El objeto en el que se guarda se pasa a la vista views/index.jade (primer argumento de `res.render()`):
+```Javascript
+router.get('/', function (req, res) {
+	var db = req.db;
+	var collection = db.get('ejcollection');
+	collection.find({}, {}, function (err, docs){
+		res.render('index', {
+			"userlist": docs
+		});
+	});
+});
+```
+En views/index.jade (teniendo *mucho* cuidado con la indentación) mostramos la lista se usuarios que tenemos en la colección `ejcollection`: 
+```
+extends layout
 
+block content
+	h1.
+  	User List
+  ul
+  	each user in userlist
+    	li
+				a(href="mailto:#{user.email}")= user.username
+```
 
+Para agregar la funcionalidad de añadir nuevos usuarios vamos nuevamente a routes/index.js y creamos una ruta que reciba un request POST. Creamos una nueva ruta que muestre el formulario para agregar nuevos usuarios:
+```Javascript
+router.get('/newuser', function (req, res) {
+	res.render('newuser', { title: 'Agrega Nuevo Usuario' });
+});
+```
+Necesitamos el template newuser. Creamos un nuevo archivo views/newuser.jade con el siguiente formulario con id `formAddUser`:
+```
+extends layout
+
+block content
+	h1= title
+		form#formAddUser(name="adduser",method="post",action="/adduser")
+			input#inputUserName(type="text", placeholder="username", name="username")
+			br
+			input#inputUserEmail(type="text", placeholder="email", name="useremail") 
+			br
+			button#btnSubmit(type="submit") submit
+```
+Recordando que encapsulamos el objeto de base de datos en cada request, podemos acceder a éste en cualquier ruta nueva que definamos, en particular, en routes/index.js podemos hacer: 
+```Javascript
+router.post('/adduser', function(req, res) {
+
+    var db = req.db;
+    var userName = req.body.username;
+    var userEmail = req.body.useremail;
+
+    var collection = db.get('ejcollection');
+
+    collection.insert({
+        "username" : userName,
+        "email" : userEmail
+    }, function (err, doc) {
+        if (err) {
+            res.send("Error al ingresar info. a la db.");
+        }
+        else {
+            res.redirect("/");
+        }
+    });
+});
+```
+Esto primero guarda en `userName` y `userEmail` los datos ingresados en los campos username y useremail del form de views/newuser.jade. Luego se hace una consulta de inserción de estos datos en la colección en cuestión. Luego de la inserción de llama a un callback. Si esta consulta fue exitosa redirije al `"/"` de la ruta, que en este caso como estamos en routes/index.js será views/index.jade.
+Para correr la aplicación:
+```
+$ npm start
+```
+Para correr la aplicación y ver todos los logs internos de Express:
+```
+En MacOS o Linux
+$ DEBUG=myapp:* npm start
+
+En Wandows
+> set DEBUG=myapp:* & npm start
+```
 
 
 ### Node.js + Express + SQL (sequelize)
